@@ -327,8 +327,8 @@ def remove_before_speech(text: str) -> str:
 
 def paraphrase_summary(sample,
                        baichuan=False,
-                       chatglm=False,
-                       chatgpt=True,
+                       chatglm=True,
+                       chatgpt=False,
                        baichuan_server=BAICHUAN_SERVER,
                        chatglm_server=CHATGLM_SERVER):
 
@@ -567,8 +567,8 @@ def gen_ner(data_all):
 
             ner_dict = return_format
 
-            # audio['ner_text'] = ner_text
-            audio['ner_dict'] = ner_dict
+            audio['ner_text'] = ner_dict
+            # audio['ner_dict'] = ner_dict
 
     return
 
@@ -648,11 +648,11 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
             header = 'Player %d:' % player_id
 
             audio = audios[task]
-            if 'format_new' not in audio.keys():
+            if 'ner_text' not in audio.keys():
                 continue
 
             content = audio['summary']
-            label = audio['format_new']
+            label = audio['ner_text']
 
             task_prompt = (
                 f"Now you are player number {speaker_id},"
@@ -662,11 +662,11 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
 
             if not summary2ner:
                 content, label = label, content
-
-            try:
-                content = GEN_SUMMARY_PROMPT + task_prompt
-            except TypeError as e:
-                print('Error in game_id:', game_id, 'content:', content, 'label:', label)
+            
+                try:
+                    content = GEN_SUMMARY_PROMPT + task_prompt
+                except TypeError as e:
+                    print('Error in game_id:', game_id, 'content:', content, 'label:', label)
 
 
             sample = {
@@ -676,7 +676,7 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
                 'label': label,
             }
             if not summary2ner and rewrite_summary:
-                sample = paraphrase_summary(sample, baichuan=True, chatglm=False)
+                sample = paraphrase_summary(sample, baichuan=False, chatglm=True)
 
             data_list.append(sample)
 
@@ -1335,10 +1335,12 @@ def main(args):
 
     # data_all = load_data(update=False)
     data_all = load_data(update=True)
+    
     count_time(data_all)
     check_complete(data_all)
 
-    gen_ner(data_all)
+    gen_ner(data_all) 
+    # print(data_all['audio'])
     # gen_key_map(data_all, print_key=True, plot_hist=True)
 
     # rms_hist(data_all)

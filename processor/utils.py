@@ -4,42 +4,58 @@
 import requests
 from datetime import date
 import json
-from openai import AzureOpenAI
+# from openai import AzureOpenAI
 import os
 import re
 
 TEMPERATURE = 0.3
 
-BAICHUAN_SERVER = "http://127.0.0.1:2000/generate"
-CHATGLM_SERVER = "http://127.0.0.1:3000"
+BAICHUAN_SERVER = "http://192.168.10.4:8080/completion"
+CHATGLM_SERVER = "http://192.168.10.4:8080/completion"
 
+
+def query_chatglm3(text,server='http://192.168.10.4:8080/completion'):
+    headers = {'Content-Type':'application/json'}
+    data = {
+        "prompt":text,
+        "n_predict":16
+    }
+    
+    response = requests.post(
+        url=server,
+        headers=headers,
+        json=data
+    )
+    return response.json()['content']
+    pass
 
 def query(text, temperature=0.7):
-    client = AzureOpenAI(
-        azure_endpoint=os.getenv('OPENAI_API_BASE'),
-        api_key=os.getenv('OPENAI_API_KEY'),
-        api_version="2023-10-01-preview",
-    )
+    return None
+    # client = AzureOpenAI(
+    #     azure_endpoint=os.getenv('OPENAI_API_BASE'),
+    #     api_key=os.getenv('OPENAI_API_KEY'),
+    #     api_version="2023-10-01-preview",
+    # )
 
-    response = client.chat.completions.create(
-        model="gpt-4",
-        temperature=TEMPERATURE,
-        messages=[
-            {
-                "role": "user",
-                "content": text,
-            },
-        ],
-    )
+    # response = client.chat.completions.create(
+    #     model="gpt-4",
+    #     temperature=TEMPERATURE,
+    #     messages=[
+    #         {
+    #             "role": "user",
+    #             "content": text,
+    #         },
+    #     ],
+    # )
 
-    try:
-        answer = response.choices[0].message.content
-        tokens = response.usage.total_tokens
-        print(f'tokens expend: {tokens}')
-        return answer
-    except Exception as e:
-        print(f'error in gpt query: {e}, response: {response}')
-        return None
+    # try:
+    #     answer = response.choices[0].message.content
+    #     tokens = response.usage.total_tokens
+    #     print(f'tokens expend: {tokens}')
+    #     return answer
+    # except Exception as e:
+    #     print(f'error in gpt query: {e}, response: {response}')
+    #     return None
 
 
 def query_baichuan2(text, server=BAICHUAN_SERVER):
@@ -54,6 +70,9 @@ def query_baichuan2(text, server=BAICHUAN_SERVER):
     return response.json()
 
 
+
+
+'''
 def query_chatglm3(text, server=CHATGLM_SERVER):
     headers = {'Content-Type': 'application/json'}
     data = {
@@ -67,7 +86,7 @@ def query_chatglm3(text, server=CHATGLM_SERVER):
     )
 
     return response.json()['response']
-
+'''
 
 def format2ner_v2(text_format):
     text_format_debug = text_format
