@@ -1261,7 +1261,7 @@ class WereWolf9:
 
         reward = 0.
         done = False
-
+        final_reward  = None
         self.random_vote = False
         if self.game_result == -1:
             player_id, state, legal_action = self.get_state_and_legal_action()
@@ -1281,7 +1281,7 @@ class WereWolf9:
             info['final_reward'] = final_reward
             info['game_result'] = game_result
 
-        return player_id, state, legal_action, reward, done, info
+        return player_id, state, legal_action, final_reward, done, info
 
     def dump_log_with_json(self, logfile):
         with open(logfile, "w", encoding="utf-8") as f:
@@ -1317,18 +1317,18 @@ class WereWolf9:
         return speak, speak_data
 
 
-if __name__ == '__main__':
-    env = WereWolf9(debug=True)
-    num_game = 1000000
-    game_results = []
+# if __name__ == '__main__':
+#     env = WereWolf9(debug=True)
+#     num_game = 1
+#     game_results = []
 
-    for i in range(num_game):
-        player_id, state, legal_action, reward, done, info = env.reset()
-        while not done:
-            action = np.random.choice(legal_action)
-            if action == 'speak':
-                action = env.gen_random_speak()
-            else:
-                assert action in legal_action
-            player_id, state, legal_action, reward, done, info = env.step(action)
+#     for i in range(num_game):
+#         player_id, state, legal_action, reward, done, info = env.reset()
+#         while not done:
+#             action = np.random.choice(legal_action)
+#             if action == 'speak':
+#                 action = env.gen_random_speak()
+#             else:
+#                 assert action in legal_action
+#             player_id, state, legal_action, reward, done, info = env.step(action)
 

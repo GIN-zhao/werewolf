@@ -249,7 +249,7 @@ def check_complete(data_all):
 
 
 def load_data(update=True):
-    path_data = '../data_all.json'
+    path_data = 'E:\homework\mywork\werewolf\data_all.json'
     if update or not os.path.exists(path_data):
         path_jsons = sorted(glob.glob(os.path.join(args.path_processed, '*.json')))
         data_all = {}
@@ -491,7 +491,7 @@ def _process_class_and_prob(key_class, key_prob):
 
 
 def _process_keys(key, id, feature_dict):
-    data = load_json('key2data.json')
+    data = load_json('E:\homework\mywork\werewolf\processor\key2data.json')
 
     if key not in data:
         data[key] = {'data': [['未处理', 'default']], 'num': 1}
@@ -567,8 +567,8 @@ def gen_ner(data_all):
 
             ner_dict = return_format
 
-            audio['ner_text'] = ner_dict
-            # audio['ner_dict'] = ner_dict
+            # audio['ner_text'] = ner_text
+            audio['ner_dict'] = ner_dict
 
     return
 
@@ -648,11 +648,11 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
             header = 'Player %d:' % player_id
 
             audio = audios[task]
-            if 'ner_text' not in audio.keys():
+            if 'format_new' not in audio.keys():
                 continue
 
             content = audio['summary']
-            label = audio['ner_text']
+            label = audio['format_new']
 
             task_prompt = (
                 f"Now you are player number {speaker_id},"
@@ -662,11 +662,11 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
 
             if not summary2ner:
                 content, label = label, content
-            
-                try:
-                    content = GEN_SUMMARY_PROMPT + task_prompt
-                except TypeError as e:
-                    print('Error in game_id:', game_id, 'content:', content, 'label:', label)
+
+            try:
+                content = GEN_SUMMARY_PROMPT + task_prompt
+            except TypeError as e:
+                print('Error in game_id:', game_id, 'content:', content, 'label:', label)
 
 
             sample = {
@@ -676,7 +676,7 @@ def gen_data_format_new(data_all, max_len_content=150, max_len_label=150, summar
                 'label': label,
             }
             if not summary2ner and rewrite_summary:
-                sample = paraphrase_summary(sample, baichuan=False, chatglm=True)
+                sample = paraphrase_summary(sample, baichuan=True, chatglm=False)
 
             data_list.append(sample)
 
@@ -1022,7 +1022,7 @@ def get_action(game_id, data, player_id, state, legal_action, speak_seq):
 
 
 def simulate_game(env, game_id, data):
-
+    rewards = []
     print(f'game id: {game_id}')
 
     game_state = data['game_state']
@@ -1040,11 +1040,14 @@ def simulate_game(env, game_id, data):
     data['speak_seq'] = copy.deepcopy(speak_seq)
 
     player_id, state, legal_action, reward, done, info = env.reset(role_list=role_list, speak_seq=speak_seq, allow_suicide=True)
+    rewards.append(reward)
     while not done:
         action = get_action(game_id, data, player_id, state, legal_action, speak_seq)
         player_id, state, legal_action, reward, done, info = env.step(action)
 
-
+        rewards.append(reward)
+    with open('rewards.txt', 'a') as f:
+        f.write(','.join([str(x) for x in rewards]) + '\n')
     # Game over, check results
     final_status_env = state['status']
     for id_str in final_status.keys():
@@ -1280,7 +1283,7 @@ def gen_feature(data_all, merge=True):
     print('feature map: ', FEATURE2ROLE, FEATURE2ACTION)
 
     game_ids = list(data_all.keys())
-    key2data_sort = load_json('key2data.json')
+    key2data_sort = load_json('E:\homework\mywork\werewolf\processor\key2data.json')
 
     feature_all = []
 
@@ -1324,7 +1327,7 @@ def parse_args():
     parser.add_argument('--path_json', default='../data/demo/game_data/', help='Path to game data JSON files.')
     parser.add_argument('--path_audio', default='../data/demo/audio/', help='Path to audio files.')
     parser.add_argument('--path_video', default='../data/demo/video/', help='Path to video files.')
-    parser.add_argument('--path_processed', default='../data/demo/opensource/', help='Path to processed data.')
+    parser.add_argument('--path_processed', default='./data/demo/opensource/', help='Path to processed data.')
     parser.add_argument('--path_temp', default='../data/temp/', help='Path to temporary files.')
     parser.add_argument('--audio_key', default=None, choices=[None, 'text', 'summary', 'format'], help='Audio key for processing.')
     return parser.parse_args()
@@ -1334,24 +1337,31 @@ def main(args):
     np.random.seed(0)
 
     # data_all = load_data(update=False)
-    data_all = load_data(update=True)
-    
+    data_all = load_data(update=False)
     count_time(data_all)
     check_complete(data_all)
 
-    gen_ner(data_all) 
-    # print(data_all['audio'])
-    # gen_key_map(data_all, print_key=True, plot_hist=True)
+    gen_ner(data_all)
+    # gen_key_map(data_all, print_key=True, plot_hist=False)
 
     # rms_hist(data_all)
     # sample_speaks(data_all)
 
     # gen_data_llm(data_all)
-    # data_feature = gen_feature(data_all, merge=False)
-    simulate_game_all(data_all)
-
-    # path_data_feature = 'data_feature.npy'
-    # np.save(path_data_feature, data_feature)
+    data_feature = gen_feature(data_all, merge=True)
+    # print(f'keys = {list(data_feature.keys())}')
+    # print(data_feature)
+    # simulate_game_all(data_all)
+    # for item in data_feature:
+    #     print(f'item = {item}')
+    #     for audio in data_feature[item]['audio']:
+    #         # print(data_feature[item]['audio'][audio])
+    #         try:
+    #             data_feature[item]['audio'][audio]['feature'] = data_feature[item]['audio'][audio]['feature'].tolist()
+    #         except:
+    #             data_feature[item]['audio'][audio]['feature'] = []
+    # path_data_feature = 'data_feature.json'
+    # # np.save(path_data_feature, data_feature)
     # save_json(path_data_feature, data_feature)
 
     # print('max speak num', MAX_SPEAK_NUM)

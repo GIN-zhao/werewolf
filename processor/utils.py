@@ -10,24 +10,9 @@ import re
 
 TEMPERATURE = 0.3
 
-BAICHUAN_SERVER = "http://192.168.10.4:8080/completion"
-CHATGLM_SERVER = "http://192.168.10.4:8080/completion"
+BAICHUAN_SERVER = "http://127.0.0.1:2000/generate"
+CHATGLM_SERVER = "http://127.0.0.1:3000"
 
-
-def query_chatglm3(text,server='http://192.168.10.4:8080/completion'):
-    headers = {'Content-Type':'application/json'}
-    data = {
-        "prompt":text,
-        "n_predict":16
-    }
-    
-    response = requests.post(
-        url=server,
-        headers=headers,
-        json=data
-    )
-    return response.json()['content']
-    pass
 
 def query(text, temperature=0.7):
     return None
@@ -70,9 +55,6 @@ def query_baichuan2(text, server=BAICHUAN_SERVER):
     return response.json()
 
 
-
-
-'''
 def query_chatglm3(text, server=CHATGLM_SERVER):
     headers = {'Content-Type': 'application/json'}
     data = {
@@ -86,7 +68,7 @@ def query_chatglm3(text, server=CHATGLM_SERVER):
     )
 
     return response.json()['response']
-'''
+
 
 def format2ner_v2(text_format):
     text_format_debug = text_format
